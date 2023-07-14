@@ -144,15 +144,24 @@ class MainFrame:
                     self.trade_bot.price_data[product_id] = latest_price
 
             # Execute the bot
-            self.trade_bot.execute(product_id, amount)
+            await self.trade_bot.execute(product_id, amount)
 
-            if self.trade_bot.should_buy(product_id):
-                await self.send_notification(f"Buy order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
 
-            if self.trade_bot.should_sell(product_id):
-                await self.send_notification(f"Sell order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
+            # This should be at the bottom of execution
 
-            await self.trade_bot.execute()  # Call the execute() method of the PeakSpam bot
+            # Test if transaction was successful
+            if self.exchange.execute_buy():
+                order = self.client.getOrder(self.exchange.order_id)
+                if order['status'] == 'filled':
+                    self.exchange.order_id = None
+                    await self.send_notification(f"Buy order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
+
+            if self.exchange.execute_sell():
+                order = self.client.getOrder(self.exchange.order_id)
+                if order['status'] == 'filled':
+                    self.exchange.order_id = None
+                    await self.send_notification(f"Sell order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
+
             time.sleep(5)
 
         await self.killSwitch()

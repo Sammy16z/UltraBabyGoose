@@ -7,6 +7,7 @@ import hashlib
 import hmac
 import json
 import logging
+import coloredlogs
 import time
 import websocket
 
@@ -92,14 +93,6 @@ class CoinbaseExchange:
             print("Failed to retrieve latest price:", str(e))
 
         return None
-        
-    def loadCredentials(self, product_id, side, price, order_id):
-        self.side = side
-        self.price = price
-        self.order_id = order_id
-        now = datetime.datetime.now()
-        trade = [now.date(), now.time(), product_id, side, price, order_id]
-        self.add_trade_to_history(trade)
 
     def load_trade_history(self):
         try:
@@ -220,7 +213,7 @@ class CoinbaseExchange:
 
             if 'success' in response and response['success']:
                 success_response = response.get('success_response', {})
-                order_id = success_response.get('order_id')
+                self.order_id = success_response.get('order_id')
                 trade_data = {
                     'date': str(datetime.now().date()),
                     'time': str(datetime.now().time()),
@@ -229,7 +222,7 @@ class CoinbaseExchange:
                     'base_size': str(amount),
                     'price': str(self.price),
                     'order_type': order_type,
-                    'order_id': order_id
+                    'order_id': self.order_id
                 }
 
                 # Add trade data to history
@@ -280,7 +273,7 @@ class CoinbaseExchange:
 
             if 'success' in response and response['success']:
                 success_response = response.get('success_response', {})
-                order_id = success_response.get('order_id')
+                self.order_id = success_response.get('order_id')
                 trade_data = {
                     'date': str(datetime.now().date()),
                     'time': str(datetime.now().time()),
@@ -289,7 +282,7 @@ class CoinbaseExchange:
                     'base_size': str(amount),
                     'price': str(self.price),
                     'order_type': order_type,
-                    'order_id': order_id
+                    'order_id': self.order_id
                 }
 
                 # Add trade data to history
@@ -313,7 +306,11 @@ class CoinbaseExchange:
         # Reset the buyable_product_id to None if the buy operation was successful
         if self.order_id:
             self.buyable_product_id = None
-            self.order_id = None
+            print("BUY order placed successfully!")
+            return True
+        else:
+            print("BUY order was NOT placed!")
+            return False
 
     async def execute_sell(self, sellable_product_id):
         await self.rate_limit()  # Enforce rate limit for private endpoint
@@ -331,5 +328,8 @@ class CoinbaseExchange:
         # Check if credentials are found
         if self.order_id:
             self.sellable_product_id = None
-            self.order_id = None
-            print("Order placed successfully!")
+            print("BUY order placed successfully!")
+            return True
+        else:
+            print("SELL order was NOT placed!")
+            return False
