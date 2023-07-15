@@ -49,6 +49,29 @@ class CoinbaseExchange:
         self.order_id = None
 
         self.last_request_time = time.time()  # Initialize last_request_time
+    
+    def colored_log(self, color, message):
+        # Color codes for terminal output
+        COLOR_GREEN = '\033[92m'
+        COLOR_RED = '\033[91m'
+        COLOR_YELLOW = '\033[93m'
+        COLOR_END = '\033[0m'
+
+        # Mapping between color names and color codes
+        color_map = {
+            'green': COLOR_GREEN,
+            'red': COLOR_RED,
+            'yellow': COLOR_YELLOW
+        }
+
+        # Check if the provided color is valid
+        if color not in color_map:
+            print(f"Invalid color: {color}. Supported colors: {', '.join(color_map.keys())}")
+            return
+
+        # Print the log message in the specified color
+        color_code = color_map[color]
+        print(f"{color_code}{message}{COLOR_END}")
 
     async def update_usdc_balance(self):
         await self.rate_limit()
@@ -306,10 +329,10 @@ class CoinbaseExchange:
         # Reset the buyable_product_id to None if the buy operation was successful
         if self.order_id:
             self.buyable_product_id = None
-            print("BUY order placed successfully!")
+            self.colored_log('green', "BUY order placed successfully!")
             return True
         else:
-            print("BUY order was NOT placed!")
+            self.colored_log('red',"BUY order was NOT placed!")
             return False
 
     async def execute_sell(self, sellable_product_id):
@@ -328,8 +351,8 @@ class CoinbaseExchange:
         # Check if credentials are found
         if self.order_id:
             self.sellable_product_id = None
-            print("BUY order placed successfully!")
+            self.colored_log('green', "SELL order placed successfully!")
             return True
         else:
-            print("SELL order was NOT placed!")
+            self.colored_log('red',"BUY order was NOT placed!")
             return False

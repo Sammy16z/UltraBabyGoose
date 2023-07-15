@@ -120,7 +120,7 @@ class MainFrame:
     
 
     async def executeBot(self):
-        logging.info("Starting Strategies...")
+        self.exchange.colored_log('green', "Starting Strategies...")
 
         # Update the usdc_balance before executing the trades
         await self.exchange.update_usdc_balance()
@@ -131,7 +131,7 @@ class MainFrame:
             running = True
         else:
             running = False
-            logging.error("Insufficient funds. Cannot execute trades.")
+            self.exchange.colored_log('red', "Insufficient funds. Cannot execute trades.")
 
         while running:
             print("iteration...")
@@ -150,13 +150,13 @@ class MainFrame:
             # This should be at the bottom of execution
 
             # Test if transaction was successful
-            if self.exchange.execute_buy():
+            if await self.exchange.execute_buy():
                 order = self.client.getOrder(self.exchange.order_id)
                 if order['status'] == 'filled':
                     self.exchange.order_id = None
                     await self.send_notification(f"Buy order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
 
-            if self.exchange.execute_sell():
+            if await self.exchange.execute_sell():
                 order = self.client.getOrder(self.exchange.order_id)
                 if order['status'] == 'filled':
                     self.exchange.order_id = None

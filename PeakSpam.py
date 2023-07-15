@@ -38,12 +38,12 @@ class PeakSpam:
 
     async def execute(self, product_id, amount):
         if await self.should_buy(product_id):
-            print("Calling execute_buy")
+            self.exchange.colored_log('green', "Calling execute_buy")
             await self.exchange.execute_buy(product_id, amount)
             await self.pass_should_buy(product_id)
             
         if await self.should_sell(product_id):
-            print("Calling execute_sell")
+            self.exchange.colored_log('green', "Calling execute_sell")
             await self.exchange.execute_sell(product_id, amount)
             await self.pass_should_sell(product_id)
             await self.exchange.update_usdc_balance
