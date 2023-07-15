@@ -140,12 +140,10 @@ class MainFrame:
             for product_id in self.product_ids:
                 latest_price = await self.exchange.get_latest_price(product_id)
                 if latest_price is not None:
-                    print(f"{product_id}: {latest_price}")
                     self.trade_bot.price_data[product_id] = latest_price
 
-
-            # Execute the bot
-            await self.trade_bot.execute(product_id, amount)
+                    # Execute the bot
+                    await self.trade_bot.execute(product_id, amount)
 
 
             # This should be at the bottom of execution
@@ -166,8 +164,6 @@ class MainFrame:
                     await self.send_notification(f"Sell order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
 
             time.sleep(5)
-
-        await self.killSwitch()
 
 
 
