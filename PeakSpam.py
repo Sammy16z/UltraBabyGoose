@@ -4,7 +4,6 @@ import logging
 import asyncio
 import talib
 import numpy as np
-import pandas as pd
 import ta.momentum
 from enum import Enum
 from datetime import datetime
@@ -39,18 +38,7 @@ class PeakSpam:
 
     async def execute(self, product_id, amount):
 
-        # Fetch the historical data for the product_id
-        historical_data = self.client.getProductCandles(
-            product_id, granularity=60)  # Using 1-minute granularity
-
-        # Resample the historical data to 30-minute intervals
-        resampled_data = self.resample_data(historical_data)
-
-        # Calculate indicators using resampled data
-        self.calculate_sma_slope(resampled_data)
-        self.calculate_zigzag_indicator(resampled_data)
-
-
+        
         if self.should_buy(product_id):
             self.exchange.colored_log('green', "Calling execute_buy")
             await self.exchange.execute_buy(product_id, amount)
@@ -137,43 +125,20 @@ class PeakSpam:
         return False
 
 
-    def calculate_sma_slope(self, product_id, period=10):
-        # Assuming resampled_data is the resampled data obtained from the 'resample_data' method
-        resampled_data = self.resample_data(self.price_data[product_id], interval='30T')
+    def calculate_sma_slope(self, price_data, period=10):
+        if isinstance(price_data, list) and len(price_data) > 0:
+            price_array = np.array(price_data)
+            if len(price_array.shape) > 1 and price_array.shape[1] > 0:
+                price_array = price_array[:, 0]  # Flatten the price array to 1 dimension
 
-        if 'close' in resampled_data:
-            sma = talib.SMA(resampled_data['close'], timeperiod=period)
+            sma = talib.SMA(price_array, timeperiod=period)
             return talib.LINEARREG_ANGLE(sma)[-1]
         else:
             return 0
 
-    def calculate_zigzag_indicator(self, product_id):
-        # Assuming resampled_data is the resampled data obtained from the 'resample_data' method
-        resampled_data = self.resample_data(self.price_data[product_id], interval='30T')
-
-        # Calculate ZigZag indicator on the 'high' and 'low' columns of the resampled_data
-        zigzag_data = ta.momentum.ZigZag(resampled_data[['high', 'low']].values, deviation=0.03, pivot='both', legs=10)
+    def calculate_zigzag_indicator(self, price_data):
+        # Calculate ZigZag indicator
+        zigzag_data = ta.momentum.ZigZag(np.array(price_data), deviation=0.01, pivot='both', legs=10)
 
         # Update the zigzag_data dictionary
         self.zigzag_data = {**self.zigzag_data, **{product_id: data for product_id, data in zip(self.product_ids, zigzag_data.values)}}
-
-    def resample_data(self, historical_data, interval='30T'):
-        # Convert the timestamp column to pandas DatetimeIndex
-        historical_data['timestamp'] = pd.to_datetime(historical_data['time'], unit='s')
-
-        # Set the timestamp column as the index
-        historical_data.set_index('timestamp', inplace=True)
-
-        # Resample the data to 30-minute intervals ('30T')
-        resampled_data = historical_data.resample(interval).agg({
-            'open': 'first',
-            'high': 'max',
-            'low': 'min',
-            'close': 'last',
-            'volume': 'sum'
-        })
-
-        # Drop any rows with NaN values (due to missing data during resampling)
-        resampled_data.dropna(inplace=True)
-
-        return resampled_data
