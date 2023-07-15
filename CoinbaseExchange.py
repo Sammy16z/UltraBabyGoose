@@ -47,6 +47,7 @@ class CoinbaseExchange:
 
         self.price = None  # Price at which the order was executed
         self.order_id = None
+        self.side = None
 
         self.last_request_time = time.time()  # Initialize last_request_time
     
@@ -203,6 +204,7 @@ class CoinbaseExchange:
 
     async def buy_logic(self, buyable_product_id, amount):
         self.price = None
+        self.side = None
         try:
             self.price = await self.get_latest_price(buyable_product_id)
             print("Got latest price:", self.price)
@@ -224,12 +226,12 @@ class CoinbaseExchange:
                 }
 
             client_order_id = coinbase_client.generate_client_order_id()
-            side = Side.BUY.name
+            self.side = Side.BUY.name
 
             response = coinbase_client.createOrder(
                 client_order_id=client_order_id,
                 product_id=buyable_product_id,
-                side=side,
+                side=self.side,
                 order_configuration=order_configuration
             )
             print("Order created")
@@ -241,7 +243,7 @@ class CoinbaseExchange:
                     'date': str(datetime.now().date()),
                     'time': str(datetime.now().time()),
                     'product_id': buyable_product_id,
-                    'side': side,
+                    'side': self.side,
                     'base_size': str(amount),
                     'price': str(self.price),
                     'order_type': order_type,
@@ -260,6 +262,7 @@ class CoinbaseExchange:
 
     async def convert_to_usdc(self, amount, product_id):
         self.price = None
+        self.side = None
         if product_id == 'usdc':
             return amount
 
@@ -284,12 +287,12 @@ class CoinbaseExchange:
                 }
 
             client_order_id = coinbase_client.generate_client_order_id()
-            side = Side.SELL.name
+            self.side = Side.SELL.name
 
             response = coinbase_client.createOrder(
                 client_order_id=client_order_id,
                 product_id=product_id,
-                side=side,
+                side=self.side,
                 order_configuration=order_configuration
             )
             print("Order created")
@@ -301,7 +304,7 @@ class CoinbaseExchange:
                     'date': str(datetime.now().date()),
                     'time': str(datetime.now().time()),
                     'product_id': self.sellable_product_id,
-                    'side': side,
+                    'side': self.side,
                     'base_size': str(amount),
                     'price': str(self.price),
                     'order_type': order_type,

@@ -151,16 +151,18 @@ class MainFrame:
             # This should be at the bottom of execution
 
             # Test if transaction was successful
-            if await self.exchange.execute_buy(product_id, amount) == True:
+            if self.exchange.order_id is not None and self.exchange.side == 'BUY':
                 order = self.client.getOrder(self.exchange.order_id)
                 if order['status'] == 'filled':
                     self.exchange.order_id = None
+                    self.exchange.side = None
                     await self.send_notification(f"Buy order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
 
-            if await self.exchange.execute_sell(product_id) == True:
+            if self.exchange.order_id is not None and self.exchange.side == 'SELL':
                 order = self.client.getOrder(self.exchange.order_id)
                 if order['status'] == 'filled':
                     self.exchange.order_id = None
+                    self.exchange.side = None
                     await self.send_notification(f"Sell order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
 
             time.sleep(5)
