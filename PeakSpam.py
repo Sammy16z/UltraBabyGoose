@@ -38,6 +38,19 @@ class PeakSpam:
         self.position_occupied = {}  # Dictionary to store position occupation status for each product
 
     async def execute(self, product_id, amount):
+
+        # Fetch the historical data for the product_id
+        historical_data = self.client.getProductCandles(
+            product_id, granularity=60)  # Using 1-minute granularity
+
+        # Resample the historical data to 30-minute intervals
+        resampled_data = self.resample_data(historical_data)
+
+        # Calculate indicators using resampled data
+        self.calculate_sma_slope(resampled_data)
+        self.calculate_zigzag_indicator(resampled_data)
+
+
         if self.should_buy(product_id):
             self.exchange.colored_log('green', "Calling execute_buy")
             await self.exchange.execute_buy(product_id, amount)
@@ -146,7 +159,7 @@ class PeakSpam:
 
     def resample_data(self, historical_data, interval='30T'):
         # Convert the timestamp column to pandas DatetimeIndex
-        historical_data['timestamp'] = pd.to_datetime(historical_data['timestamp'])
+        historical_data['timestamp'] = pd.to_datetime(historical_data['time'], unit='s')
 
         # Set the timestamp column as the index
         historical_data.set_index('timestamp', inplace=True)
