@@ -37,12 +37,12 @@ class PeakSpam:
         self.position_occupied = {}  # Dictionary to store position occupation status for each product
 
     async def execute(self, product_id, amount):
-        if await self.should_buy(product_id):
+        if self.should_buy(product_id):
             self.exchange.colored_log('green', "Calling execute_buy")
             await self.exchange.execute_buy(product_id, amount)
             await self.pass_should_buy(product_id)
             
-        if await self.should_sell(product_id):
+        if self.should_sell(product_id):
             self.exchange.colored_log('green', "Calling execute_sell")
             await self.exchange.execute_sell(product_id, amount)
             await self.pass_should_sell(product_id)

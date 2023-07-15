@@ -143,6 +143,7 @@ class MainFrame:
                     print(f"{product_id}: {latest_price}")
                     self.trade_bot.price_data[product_id] = latest_price
 
+
             # Execute the bot
             await self.trade_bot.execute(product_id, amount)
 
@@ -150,13 +151,13 @@ class MainFrame:
             # This should be at the bottom of execution
 
             # Test if transaction was successful
-            if await self.exchange.execute_buy():
+            if await self.exchange.execute_buy(product_id, amount) == True:
                 order = self.client.getOrder(self.exchange.order_id)
                 if order['status'] == 'filled':
                     self.exchange.order_id = None
                     await self.send_notification(f"Buy order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
 
-            if await self.exchange.execute_sell():
+            if await self.exchange.execute_sell(product_id) == True:
                 order = self.client.getOrder(self.exchange.order_id)
                 if order['status'] == 'filled':
                     self.exchange.order_id = None
