@@ -38,7 +38,7 @@ class PeakSpam:
 
     async def execute(self, product_id, amount):
 
-        
+
         if self.should_buy(product_id):
             self.exchange.colored_log('green', "Calling execute_buy")
             await self.exchange.execute_buy(product_id, amount)
@@ -125,7 +125,7 @@ class PeakSpam:
         return False
 
 
-    def calculate_sma_slope(self, price_data, period=10):
+    def calculate_sma(self, price_data, period=10):
         if isinstance(price_data, list) and len(price_data) > 0:
             price_array = np.array(price_data)
             if len(price_array.shape) > 1 and price_array.shape[1] > 0:
@@ -136,7 +136,7 @@ class PeakSpam:
         else:
             return 0
 
-    def calculate_zigzag_indicator(self, price_data):
+    def calculate_zigzag(self, price_data):
         # Calculate ZigZag indicator
         zigzag_data = ta.momentum.ZigZag(np.array(price_data), deviation=0.01, pivot='both', legs=10)
 
