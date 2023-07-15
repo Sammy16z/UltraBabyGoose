@@ -80,7 +80,7 @@ class PeakSpam:
 
         price_data = self.price_data[product_id]  # Retrieve the price data for the specific product ID
 
-        if self.calculate_sma_slope(price_data, period=10) >= 20 and self.zigzag_data[product_id][-1].direction == 'up' \
+        if self.calculate_sma(price_data, period=10) >= 20 and self.zigzag_data[product_id][-1].direction == 'up' \
                 and self.zigzag_data[product_id][-2].direction != 'up':
             # Rest of the code
 
