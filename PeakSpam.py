@@ -134,9 +134,12 @@ class PeakSpam:
         else:
             return 0
 
-    def calculate_zigzag(self, price_data):
-        # Calculate ZigZag indicator
-        zigzag_data = ta.momentum.ZigZag(np.array(price_data), deviation=0.01, pivot='both', legs=10)
 
-        # Update the zigzag_data dictionary
-        self.zigzag_data = {**self.zigzag_data, **{product_id: data for product_id, data in zip(self.product_ids, zigzag_data.values)}}
+
+    def calculate_zigzag(self, price_data):
+        if isinstance(price_data, list) and len(price_data) > 10:  # Check if there are at least 10 data points (adjust as needed)
+            # Calculate ZigZag indicator
+            zigzag_data = ta.momentum.ZigZag(np.array(price_data), deviation=0.01, pivot='both', legs=10)
+
+            # Update the zigzag_data dictionary
+            self.zigzag_data = {**self.zigzag_data, **{product_id: data for product_id, data in zip(self.product_ids, zigzag_data.values)}}
