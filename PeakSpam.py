@@ -124,7 +124,7 @@ class PeakSpam:
 
 
     def calculate_sma(self, price_data, period=10):
-        if isinstance(price_data, list) and len(price_data) > 0:
+        if isinstance(price_data, list) and len(price_data) >= period:
             price_array = np.array(price_data)
             if len(price_array.shape) > 1 and price_array.shape[1] > 0:
                 price_array = price_array[:, 0]  # Flatten the price array to 1 dimension
@@ -134,12 +134,9 @@ class PeakSpam:
         else:
             return 0
 
-
-
     def calculate_zigzag(self, price_data):
-        if isinstance(price_data, list) and len(price_data) > 10:  # Check if there are at least 10 data points (adjust as needed)
-            # Calculate ZigZag indicator
+        if isinstance(price_data, list) and len(price_data) >= 10:
             zigzag_data = ta.momentum.ZigZag(np.array(price_data), deviation=0.01, pivot='both', legs=10)
-
-            # Update the zigzag_data dictionary
             self.zigzag_data = {**self.zigzag_data, **{product_id: data for product_id, data in zip(self.product_ids, zigzag_data.values)}}
+        else:
+            self.zigzag_data = {product_id: [] for product_id in self.product_ids}  # Empty list if insufficient data
