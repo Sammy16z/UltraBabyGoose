@@ -18,6 +18,7 @@ from collections.abc import MutableMapping
 import CoinbaseAPI
 from CoinbaseExchange import CoinbaseExchange
 
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -63,8 +64,6 @@ class PeakSpam:
             self.position_occupied[product_id] = False  # Set position_occupied to False for the specific product ID
             if product_id in self.entry_price:
                 del self.entry_price[product_id]  # Remove entry_price for the specific product ID being sold
-            if product_id in self.price_data:
-                del self.price_data[product_id]  # Remove price_data for the specific product ID being sold
 
             return True
         
