@@ -140,7 +140,6 @@ class MainFrame:
                 latest_price = await self.exchange.get_latest_price(product_id)
                 if latest_price is not None:
                     self.trade_bot.price_data[product_id] = latest_price
-                    self.exchange.colored_log('yellow', self.trade_bot.price_data[product_id])
 
                     # Execute the bot
                     await self.trade_bot.execute(product_id, amount)
