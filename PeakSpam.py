@@ -31,7 +31,7 @@ class PeakSpam:
         self.chat_id = CoinbaseAPI.CHAT_ID
 
         # Initialize necessary variables and parameters
-        self.price_data = {}  # Dictionary to store price data for each product
+        self.price_data = {product_id: [] for product_id in self.product_ids}
         self.zigzag_data = {}  # Dictionary to store zigzag indicator data for each product
         self.entry_price = {}  # Dictionary to store entry price for each product
         self.position_occupied = {}  # Dictionary to store position occupation status for each product
