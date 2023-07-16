@@ -36,6 +36,7 @@ from collections.abc import MutableMapping
 import CoinbaseAPI
 from CoinbaseExchange import CoinbaseExchange
 from PeakSpam import PeakSpam
+import WebRunner
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -134,33 +135,26 @@ class MainFrame:
             self.exchange.colored_log('red', "Insufficient funds. Cannot execute trades.")
 
         while running:
-
             # Update the price_data dictionary with the latest price values
             for product_id in self.product_ids:
-                latest_price = await self.exchange.get_latest_price(product_id)
+                # Get the latest price from the WebSocket feed (you need to implement this part)
+                latest_price = WebRunner.create_websocket(product_id)
+
                 if latest_price is not None:
-                    self.trade_bot.price_data[product_id].append(latest_price)
+                    # Append the latest price to the price_data dictionary
+                    self.trade_bot.price_data[product_id].append(latest_price['price'])
 
                     # Execute the bot
                     await self.trade_bot.execute(product_id, amount)
 
-
-            # This should be at the bottom of execution
-
-            # Test if transaction was successful
-            if self.exchange.order_id is not None and self.exchange.side == 'BUY':
-                order = self.client.getOrder(self.exchange.order_id)
-                if order['status'] == 'filled':
-                    self.exchange.order_id = None
-                    self.exchange.side = None
-                    await self.send_notification(f"Buy order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
-
-            if self.exchange.order_id is not None and self.exchange.side == 'SELL':
-                order = self.client.getOrder(self.exchange.order_id)
-                if order['status'] == 'filled':
-                    self.exchange.order_id = None
-                    self.exchange.side = None
-                    await self.send_notification(f"Sell order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
+            # Test if transaction was successful and send notifications
+            for product_id in self.product_ids:
+                if self.exchange.order_id is not None:
+                    order = self.client.getOrder(self.exchange.order_id)
+                    if order['status'] == 'filled':
+                        self.exchange.order_id = None
+                        self.exchange.side = None
+                        await self.send_notification(f"Order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.trade_bot.price_data[product_id][-1]}")
 
             time.sleep(5)
 
