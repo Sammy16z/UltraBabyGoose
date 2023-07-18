@@ -80,6 +80,7 @@ class PeakSpam:
         if len(price_data) < 1:
             # If price_data is empty, return False or handle the condition accordingly
             return False
+        print(f"Product ID: {product_id}, ZigZag Data: {self.zigzag_data[product_id]}")
 
         if self.calculate_sma(price_data, period=10) >= 20 and self.zigzag_data[product_id][-1].direction == 'up' \
                 and self.zigzag_data[product_id][-2].direction != 'up':
@@ -124,22 +125,3 @@ class PeakSpam:
                 return True
 
         return False
-
-
-    def calculate_sma(self, price_data, period=10):
-        if isinstance(price_data, list) and len(price_data) >= period:
-            price_array = np.array(price_data)
-            if len(price_array.shape) > 1 and price_array.shape[1] > 0:
-                price_array = price_array[:, 0]  # Flatten the price array to 1 dimension
-
-            sma = talib.SMA(price_array, timeperiod=period)
-            return talib.LINEARREG_ANGLE(sma)[-1]
-        else:
-            return 0
-
-    def calculate_zigzag(self, price_data):
-        if isinstance(price_data, list) and len(price_data) >= 10:
-            zigzag_data = ta.momentum.ZigZag(np.array(price_data), deviation=0.01, pivot='both', legs=10)
-            self.zigzag_data = {**self.zigzag_data, **{product_id: data for product_id, data in zip(self.product_ids, zigzag_data.values)}}
-        else:
-            self.zigzag_data = {product_id: [] for product_id in self.product_ids}  # Empty list if insufficient data
