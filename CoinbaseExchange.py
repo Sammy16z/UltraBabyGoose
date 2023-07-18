@@ -199,7 +199,7 @@ class CoinbaseExchange:
 
     async def calculate_amount_spent(self):
         if self.usdc_balance is not None:
-            amount_spent = 0.25 * self.usdc_balance  # 25% of the usdc balance
+            amount_spent = 0.05 * self.usdc_balance  # 5% of the usdc balance
         return amount_spent
 
     async def buy_logic(self, buyable_product_id, amount):

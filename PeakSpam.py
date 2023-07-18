@@ -33,7 +33,7 @@ class PeakSpam:
 
         # Initialize necessary variables and parameters
         self.price_data = {product_id: [] for product_id in self.product_ids}
-        self.zigzag_data = {}  # Dictionary to store zigzag indicator data for each product
+        self.zigzag_data = {product_id: [] for product_id in self.product_ids}
         self.entry_price = {}  # Dictionary to store entry price for each product
         self.position_occupied = {}  # Dictionary to store position occupation status for each product
 
@@ -76,6 +76,10 @@ class PeakSpam:
             return False
 
         price_data = self.price_data[product_id]  # Retrieve the price data for the specific product ID
+
+        if len(price_data) < 1:
+            # If price_data is empty, return False or handle the condition accordingly
+            return False
 
         if self.calculate_sma(price_data, period=10) >= 20 and self.zigzag_data[product_id][-1].direction == 'up' \
                 and self.zigzag_data[product_id][-2].direction != 'up':
