@@ -6,6 +6,7 @@ from datetime import datetime
 import uuid
 import http.client
 import json
+import socket
 from coinbase_advanced_trader.cb_auth import CBAuth
 from coinbase_advanced_trader import coinbase_client
 from coinbase_advanced_trader.coinbase_client import Side
@@ -32,6 +33,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler
 
 from collections.abc import MutableMapping
 
+from WebRunner import latest_prices
 
 import CoinbaseAPI
 from CoinbaseExchange import CoinbaseExchange
@@ -118,6 +120,29 @@ class MainFrame:
         # Define the command handler for the termination command from Telegram
 
     
+    async def read_tcp_server(self):
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect(('localhost', 12345))
+        print("Connected to WebSocket TCP server.")
+        
+        while True:
+            data = client_socket.recv(4096)
+            if not data:
+                break
+            try:
+                parsed_data = json.loads(data.decode('utf-8'))
+                print("Received data from WebSocket TCP server:", parsed_data)
+                # Process the received WebSocket data in your main script
+                # For example, update the 'latest_prices' dictionary
+                product_id = parsed_data['events'][0]['tickers'][0]['product_id']
+                price = float(parsed_data['events'][0]['tickers'][0]['price'])
+                latest_prices[product_id] = price
+            except Exception as e:
+                print(f"Error processing received data: {e}")
+
+        client_socket.close()
+
+    
 
     async def executeBot(self):
         self.exchange.colored_log('green', "Starting Strategies...")
@@ -134,15 +159,17 @@ class MainFrame:
             self.exchange.colored_log('red', "Insufficient funds. Cannot execute trades.")
 
         while running:
-
-            # Update the price_data dictionary with the latest price values
+            # Update the price_data and zigzag_data dictionaries with the latest price values and ZigZag indicators
             for product_id in self.product_ids:
-                latest_price = await self.exchange.get_latest_price(product_id)
+                latest_price = latest_prices.get(product_id)
                 if latest_price is not None:
                     self.trade_bot.price_data[product_id].append(latest_price)
-                    
 
-                    # Execute the bot
+                    # Calculate the ZigZag indicator and update zigzag_data for the specific product_id
+                    zigzag = self.trade_bot.calculate_zigzag(self.trade_bot.price_data[product_id])
+                    self.trade_bot.zigzag_data[product_id] = zigzag
+
+                    # Execute the PeakSpam bot for the current product_id and amount
                     await self.trade_bot.execute(product_id, amount)
 
 
@@ -173,4 +200,9 @@ bot = MainFrame()
 if __name__ == '__main__':
     logging.info("Running Files...")
 
+    # Start the TCP client to receive data from the WebSocket TCP server in a separate thread
+    loop = asyncio.get_event_loop()
+    tcp_server_thread = loop.run_in_executor(None, bot.read_tcp_server)
+
+    # Run the executeBot function in the main thread
     asyncio.run(bot.executeBot())
