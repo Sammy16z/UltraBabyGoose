@@ -33,9 +33,10 @@ from telegram.ext import Updater, CommandHandler, MessageHandler
 
 from collections.abc import MutableMapping
 
-from WebRunner import latest_prices
-
+import socket
 import CoinbaseAPI
+from WebRunner import latest_prices  # Move this import here
+
 from CoinbaseExchange import CoinbaseExchange
 from PeakSpam import PeakSpam
 
