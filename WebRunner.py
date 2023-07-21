@@ -50,7 +50,6 @@ def on_message(ws, message):
     except Exception as e:
         print(f"Error processing received message: {e}, Message: {message}")
 
-
 def create_websocket(product_id):
     channel = 'ticker'
     timestamp = str(int(time.time()))
@@ -80,18 +79,13 @@ def create_websocket(product_id):
     ws.on_open = on_open
     ws.on_close = on_close
 
-    # Use an infinite loop to keep the WebSocket connection open
-    while True:
-        ws.run_forever(ping_interval=10, ping_timeout=5)  # Adjust ping_interval and ping_timeout as needed
-        time.sleep(10)  # Sleep for a short period before reconnecting
+    ws.run_forever()
 
 if __name__ == "__main__":
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp_socket.connect(('localhost', 12345))
 
-    # Iterate over each product ID and create a separate thread with a WebSocket connection
     for product_id in CoinbaseAPI.PRODUCT_IDS:
-        websocket_thread = Thread(target=create_websocket, args=(product_id,))  # No need to pass 'tcp_socket' here
+        websocket_thread = Thread(target=create_websocket, args=(product_id,))
         websocket_thread.start()
-        time.sleep(1)  # Sleep for 1 second between creating each WebSocket connection
-
+        time.sleep(1)

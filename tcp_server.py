@@ -1,5 +1,3 @@
-# tcp_server.py
-
 import socket
 
 def start_tcp_server():
@@ -14,8 +12,17 @@ def start_tcp_server():
     while True:
         client_socket, client_address = tcp_socket.accept()
         print(f"Connection from {client_address}")
-        data = client_socket.recv(1024)
-        print(f"Received data: {data.decode('utf-8')}")
+        
+        try:
+            while True:
+                data = client_socket.recv(1024)
+                if not data:
+                    break
+                
+                print(f"Received data: {data.decode('utf-8')}")
+        except Exception as e:
+            print(f"Error receiving data from client: {e}")
+
         client_socket.close()
 
 if __name__ == "__main__":
