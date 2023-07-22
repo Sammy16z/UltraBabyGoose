@@ -173,7 +173,6 @@ class MainFrame:
                     # Execute the PeakSpam bot for the current product_id and amount
                     await self.trade_bot.execute(product_id, amount)
 
-
             # This should be at the bottom of execution
 
             # Test if transaction was successful
