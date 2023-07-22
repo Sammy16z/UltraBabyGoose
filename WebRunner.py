@@ -1,14 +1,10 @@
-# webrunner.py
-
 import websocket
 import json
 import time
 import hashlib
 import hmac
 import CoinbaseAPI
-import socket
 from threading import Thread
-
 
 # Derived from your Coinbase Retail API Key
 # SIGNING_KEY: the signing key provided as a part of your API key. Also called the "SECRET KEY"
@@ -35,18 +31,15 @@ def sign_message(message):
     message = hmac.new(SIGNING_KEY.encode('utf-8'), message.encode('utf-8'), digestmod=hashlib.sha256).hexdigest()
     return message
 
-# Keep the existing code to establish WebSocket connections and receive real-time price data
-# Instead of printing, update a shared variable with the latest price data
-latest_prices = {}
+websocket_data = {}
 
 def on_message(ws, message):
     try:
         parsed_data = json.loads(message)
-        # Send the WebSocket data to the TCP server
-        try:
-            tcp_socket.send(json.dumps(parsed_data).encode('utf-8'))
-        except Exception as e:
-            print(f"Error sending data to TCP server: {e}")
+        for event in parsed_data['events']:
+            product_id = event['tickers'][0]['product_id']
+            websocket_data[product_id] = event
+        print(parsed_data)  # Print the parsed data for debugging purposes
     except Exception as e:
         print(f"Error processing received message: {e}, Message: {message}")
 
@@ -81,11 +74,8 @@ def create_websocket(product_id):
 
     ws.run_forever()
 
-if __name__ == "__main__":
-    tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_socket.connect(('localhost', 12345))
-
-    for product_id in CoinbaseAPI.PRODUCT_IDS:
-        websocket_thread = Thread(target=create_websocket, args=(product_id,))
-        websocket_thread.start()
-        time.sleep(1)
+# Iterate over each product ID and create a separate thread with a WebSocket connection
+for product_id in CoinbaseAPI.PRODUCT_IDS:
+    websocket_thread = Thread(target=create_websocket, args=(product_id,))
+    websocket_thread.start()
+    time.sleep(1)  # Sleep for 1 second between creating each WebSocket connection

@@ -35,7 +35,7 @@ from collections.abc import MutableMapping
 
 import socket
 import CoinbaseAPI
-from WebRunner import latest_prices  # Move this import here
+from WebRunner import websocket_data
 
 from CoinbaseExchange import CoinbaseExchange
 from PeakSpam import PeakSpam
@@ -121,29 +121,6 @@ class MainFrame:
         # Define the command handler for the termination command from Telegram
 
     
-    async def read_tcp_server(self):
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect(('localhost', 12345))
-        print("Connected to WebSocket TCP server.")
-        
-        while True:
-            data = client_socket.recv(4096)
-            if not data:
-                break
-            try:
-                parsed_data = json.loads(data.decode('utf-8'))
-                print("Received data from WebSocket TCP server:", parsed_data)
-                # Process the received WebSocket data in your main script
-                # For example, update the 'latest_prices' dictionary
-                product_id = parsed_data['events'][0]['tickers'][0]['product_id']
-                price = float(parsed_data['events'][0]['tickers'][0]['price'])
-                latest_prices[product_id] = price
-            except Exception as e:
-                print(f"Error processing received data: {e}")
-
-        client_socket.close()
-
-    
 
     async def executeBot(self):
         self.exchange.colored_log('green', "Starting Strategies...")
@@ -162,13 +139,17 @@ class MainFrame:
         while running:
             # Update the price_data and zigzag_data dictionaries with the latest price values and ZigZag indicators
             for product_id in self.product_ids:
-                latest_price = latest_prices.get(product_id)
-                if latest_price is not None:
+                data = websocket_data.get(product_id)
+                if data:
+                    latest_price = float(data['events'][0]['tickers'][0]['price'])
                     self.trade_bot.price_data[product_id].append(latest_price)
 
                     # Calculate the ZigZag indicator and update zigzag_data for the specific product_id
                     zigzag = self.trade_bot.calculate_zigzag(self.trade_bot.price_data[product_id])
                     self.trade_bot.zigzag_data[product_id] = zigzag
+
+                    # Log the latest_prices for each product_id
+                    logging.info(f"Latest Price for {product_id}: {latest_price}")
 
                     # Execute the PeakSpam bot for the current product_id and amount
                     await self.trade_bot.execute(product_id, amount)
