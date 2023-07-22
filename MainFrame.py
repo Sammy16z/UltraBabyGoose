@@ -138,21 +138,19 @@ class MainFrame:
 
         while running:
             # Update the price_data and zigzag_data dictionaries with the latest price values and ZigZag indicators
-            for product_id in self.product_ids:
-                data = websocket_data.get(product_id)
-                if data:
-                    latest_price = float(data['events'][0]['tickers'][0]['price'])
-                    self.trade_bot.price_data[product_id].append(latest_price)
+            for product_id, data in websocket_data.items():  # Iterate over the items in websocket_data
+                latest_price = float(data['events'][0]['tickers'][0]['price'])
+                self.trade_bot.price_data[product_id].append(latest_price)
 
-                    # Calculate the ZigZag indicator and update zigzag_data for the specific product_id
-                    zigzag = self.trade_bot.calculate_zigzag(self.trade_bot.price_data[product_id])
-                    self.trade_bot.zigzag_data[product_id] = zigzag
+                # Calculate the ZigZag indicator and update zigzag_data for the specific product_id
+                zigzag = self.trade_bot.calculate_zigzag(self.trade_bot.price_data[product_id])
+                self.trade_bot.zigzag_data[product_id] = zigzag
 
-                    # Log the latest_prices for each product_id
-                    logging.info(f"Latest Price for {product_id}: {latest_price}")
+                # Log the latest_prices for each product_id
+                logging.info(f"Latest Price for {product_id}: {latest_price}")
 
-                    # Execute the PeakSpam bot for the current product_id and amount
-                    await self.trade_bot.execute(product_id, amount)
+                # Execute the PeakSpam bot for the current product_id and amount
+                await self.trade_bot.execute(product_id, amount)
 
             # This should be at the bottom of execution
 
@@ -180,10 +178,6 @@ bot = MainFrame()
 
 if __name__ == '__main__':
     logging.info("Running Files...")
-
-    # Start the TCP client to receive data from the WebSocket TCP server in a separate thread
-    loop = asyncio.get_event_loop()
-    tcp_server_thread = loop.run_in_executor(None, bot.read_tcp_server)
 
     # Run the executeBot function in the main thread
     asyncio.run(bot.executeBot())
