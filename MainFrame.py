@@ -123,6 +123,8 @@ class MainFrame:
     
 
     async def executeBot(self):
+        # Change the logging level to WARNING or higher
+        logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
         self.exchange.colored_log('green', "Starting Strategies...")
 
         # Update the usdc_balance before executing the trades

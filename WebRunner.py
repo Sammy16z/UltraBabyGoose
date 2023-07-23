@@ -39,7 +39,8 @@ def on_message(ws, message):
         for event in parsed_data['events']:
             product_id = event['tickers'][0]['product_id']
             websocket_data[product_id] = event
-        print(parsed_data)  # Print the parsed data for debugging purposes
+        # Remove the print statement to avoid printing the WebSocket data
+        # print(parsed_data)  # Print the parsed data for debugging purposes
     except Exception as e:
         print(f"Error processing received message: {e}, Message: {message}")
 
