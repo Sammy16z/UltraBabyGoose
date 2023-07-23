@@ -35,7 +35,7 @@ from collections.abc import MutableMapping
 
 import socket
 import CoinbaseAPI
-from WebRunner import websocket_data
+from WebRunner import websocket_data, websocket_data_queue
 
 from CoinbaseExchange import CoinbaseExchange
 from PeakSpam import PeakSpam
@@ -141,10 +141,13 @@ class MainFrame:
         await asyncio.sleep(1)  # Add a delay of 1 second to give WebRunner.py time to update websocket_data
 
         while running:
-            print("websocket_data:", websocket_data)
-            # Update the price_data and zigzag_data dictionaries with the latest price values and ZigZag indicators
-            for product_id, data in websocket_data.items():  # Iterate over the items in websocket_data
-                latest_price = float(data['events'][0]['tickers'][0]['price'])
+            # Retrieve data from the queue if available (timeout to prevent blocking)
+            parsed_data = websocket_data_queue.get(timeout=1)
+
+            # Extract the necessary information from parsed_data
+            for event in parsed_data['events']:
+                product_id = event['tickers'][0]['product_id']
+                latest_price = float(event['tickers'][0]['price'])
                 self.trade_bot.price_data[product_id].append(latest_price)
 
                 # Calculate the ZigZag indicator and update zigzag_data for the specific product_id

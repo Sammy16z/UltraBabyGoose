@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import CoinbaseAPI
 from threading import Thread
+import queue
 
 # Derived from your Coinbase Retail API Key
 # SIGNING_KEY: the signing key provided as a part of your API key. Also called the "SECRET KEY"
@@ -32,15 +33,13 @@ def sign_message(message):
     return message
 
 websocket_data = {}
+websocket_data_queue = queue.Queue()
+
 
 def on_message(ws, message):
     try:
         parsed_data = json.loads(message)
-        for event in parsed_data['events']:
-            product_id = event['tickers'][0]['product_id']
-            websocket_data[product_id] = event
-        # Remove the print statement from on_message to avoid blocking
-            print(parsed_data)
+        websocket_data_queue.put(parsed_data)
     except Exception as e:
         print(f"Error processing received message: {e}, Message: {message}")
 
