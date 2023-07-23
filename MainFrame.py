@@ -123,8 +123,8 @@ class MainFrame:
     
 
     async def executeBot(self):
-        # Change the logging level to WARNING or higher
-        logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
+        # Change the logging level to INFO or lower
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         self.exchange.colored_log('green', "Starting Strategies...")
 
         # Update the usdc_balance before executing the trades
@@ -138,7 +138,10 @@ class MainFrame:
             running = False
             self.exchange.colored_log('red', "Insufficient funds. Cannot execute trades.")
 
+        await asyncio.sleep(1)  # Add a delay of 1 second to give WebRunner.py time to update websocket_data
+
         while running:
+            print("websocket_data:", websocket_data)
             # Update the price_data and zigzag_data dictionaries with the latest price values and ZigZag indicators
             for product_id, data in websocket_data.items():  # Iterate over the items in websocket_data
                 latest_price = float(data['events'][0]['tickers'][0]['price'])

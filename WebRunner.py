@@ -39,8 +39,8 @@ def on_message(ws, message):
         for event in parsed_data['events']:
             product_id = event['tickers'][0]['product_id']
             websocket_data[product_id] = event
-        # Remove the print statement to avoid printing the WebSocket data
-        # print(parsed_data)  # Print the parsed data for debugging purposes
+        # Remove the print statement from on_message to avoid blocking
+            print(parsed_data)
     except Exception as e:
         print(f"Error processing received message: {e}, Message: {message}")
 
@@ -75,8 +75,15 @@ def create_websocket(product_id):
 
     ws.run_forever()
 
-# Iterate over each product ID and create a separate thread with a WebSocket connection
-for product_id in CoinbaseAPI.PRODUCT_IDS:
-    websocket_thread = Thread(target=create_websocket, args=(product_id,))
-    websocket_thread.start()
-    time.sleep(1)  # Sleep for 1 second between creating each WebSocket connection
+# ... (existing code)
+
+# In the if __name__ == '__main__': block, replace the loop with the following:
+if __name__ == '__main__':
+    for product_id in CoinbaseAPI.PRODUCT_IDS:
+        websocket_thread = Thread(target=create_websocket, args=(product_id,))
+        websocket_thread.daemon = True
+        websocket_thread.start()
+        time.sleep(1)
+    # Keep the WebSocket threads running
+    while True:
+        time.sleep(1)
