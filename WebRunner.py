@@ -5,7 +5,6 @@ import hashlib
 import hmac
 import CoinbaseAPI
 from threading import Thread
-import queue
 
 # Derived from your Coinbase Retail API Key
 # SIGNING_KEY: the signing key provided as a part of your API key. Also called the "SECRET KEY"
@@ -33,28 +32,28 @@ def sign_message(message):
     return message
 
 websocket_data = {}
-websocket_data_queue = queue.Queue()
-
 
 def on_message(ws, message):
     try:
         parsed_data = json.loads(message)
-        websocket_data_queue.put(parsed_data)
+        product_id = parsed_data.get('product_id')
+        if product_id:
+            websocket_data[product_id] = parsed_data
     except Exception as e:
         print(f"Error processing received message: {e}, Message: {message}")
 
-def create_websocket(product_id):
+def create_websocket(market):
     channel = 'ticker'
     timestamp = str(int(time.time()))
     subscribe_msg = {
         'type': 'subscribe',
         'product_ids': [
-            product_id
+            market
         ],
         'channel': 'ticker',
         'api_key': API_KEY,
         'timestamp': timestamp,
-        'signature': sign_message(timestamp + channel + product_id)
+        'signature': sign_message(timestamp + channel + market)
     }
     subscribe_msg = json.dumps(subscribe_msg)
 
@@ -73,8 +72,6 @@ def create_websocket(product_id):
     ws.on_close = on_close
 
     ws.run_forever()
-
-# ... (existing code)
 
 # In the if __name__ == '__main__': block, replace the loop with the following:
 if __name__ == '__main__':

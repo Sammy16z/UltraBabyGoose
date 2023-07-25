@@ -15,6 +15,7 @@ from coinbase.wallet.client import Client
 
 from datetime import timedelta
 import time
+import queue
 import logging
 import coloredlogs
 import asyncio
@@ -35,7 +36,7 @@ from collections.abc import MutableMapping
 
 import socket
 import CoinbaseAPI
-from WebRunner import websocket_data, websocket_data_queue
+from WebRunner import websocket_data
 
 from CoinbaseExchange import CoinbaseExchange
 from PeakSpam import PeakSpam
@@ -63,6 +64,7 @@ class MainFrame:
         self.chat_id = CoinbaseAPI.CHAT_ID
 
         self.portfolio_balance = None
+        self.websocket_data_queue = queue.Queue()
 
         self.trade_bot = PeakSpam('PeakSpamBot')
     
@@ -141,13 +143,9 @@ class MainFrame:
         await asyncio.sleep(1)  # Add a delay of 1 second to give WebRunner.py time to update websocket_data
 
         while running:
-            # Retrieve data from the queue if available (timeout to prevent blocking)
-            parsed_data = websocket_data_queue.get(timeout=1)
-
-            # Extract the necessary information from parsed_data
-            for event in parsed_data['events']:
-                product_id = event['tickers'][0]['product_id']
-                latest_price = float(event['tickers'][0]['price'])
+            # Use the updated websocket_data dictionary directly
+            for product_id, data in websocket_data.items():
+                latest_price = float(data['tickers'][0]['price'])
                 self.trade_bot.price_data[product_id].append(latest_price)
 
                 # Calculate the ZigZag indicator and update zigzag_data for the specific product_id
