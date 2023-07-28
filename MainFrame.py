@@ -64,7 +64,6 @@ class MainFrame:
         self.chat_id = CoinbaseAPI.CHAT_ID
 
         self.portfolio_balance = None
-        self.websocket_data_queue = queue.Queue()
 
         self.trade_bot = PeakSpam('PeakSpamBot')
     
@@ -140,8 +139,6 @@ class MainFrame:
             running = False
             self.exchange.colored_log('red', "Insufficient funds. Cannot execute trades.")
 
-        await asyncio.sleep(1)  # Add a delay of 1 second to give WebRunner.py time to update websocket_data
-
         while running:
             # Use the updated websocket_data dictionary directly
             for product_id, data in websocket_data.items():
@@ -176,6 +173,7 @@ class MainFrame:
                     await self.send_notification(f"Sell order executed:\nProduct ID: {product_id}\nAmount Spent: {amount}\nPrice: {self.exchange.price}")
 
             time.sleep(5)
+
 
 
 

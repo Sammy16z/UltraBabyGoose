@@ -6,6 +6,7 @@ import hmac
 import CoinbaseAPI
 from threading import Thread
 
+
 # Derived from your Coinbase Retail API Key
 # SIGNING_KEY: the signing key provided as a part of your API key. Also called the "SECRET KEY"
 # API_KEY: the api key provided as a part of your API key. Also called the "PUBLIC KEY"
@@ -27,45 +28,42 @@ CHANNEL_NAMES = {
 # The base URL of the API
 WS_API_URL = 'wss://advanced-trade-ws.coinbase.com'
 
+# Dictionary to hold the latest market data for each product_id
+websocket_data = {}
+
 def sign_message(message):
     message = hmac.new(SIGNING_KEY.encode('utf-8'), message.encode('utf-8'), digestmod=hashlib.sha256).hexdigest()
     return message
 
-websocket_data = {}
+def on_message(ws, message, product_id):
+    parsed_data = json.loads(message)
+    websocket_data[product_id] = parsed_data
+    print(f"Received message for {product_id}: {websocket_data}")
 
-def on_message(ws, message):
-    try:
-        parsed_data = json.loads(message)
-        product_id = parsed_data.get('product_id')
-        if product_id:
-            websocket_data[product_id] = parsed_data
-    except Exception as e:
-        print(f"Error processing received message: {e}, Message: {message}")
-
-def create_websocket(market):
+def create_websocket(product_id):
     channel = 'ticker'
     timestamp = str(int(time.time()))
     subscribe_msg = {
         'type': 'subscribe',
         'product_ids': [
-            market
+            product_id
         ],
         'channel': 'ticker',
         'api_key': API_KEY,
         'timestamp': timestamp,
-        'signature': sign_message(timestamp + channel + market)
+        'signature': sign_message(timestamp + channel + product_id)
     }
     subscribe_msg = json.dumps(subscribe_msg)
 
     ws = websocket.WebSocketApp(
         WS_API_URL,
-        on_message=on_message
+        on_message=lambda ws, message: on_message(ws, message, product_id)
     )
 
     def on_open(ws):
         ws.send(subscribe_msg)
 
-    def on_close(ws):
+    def on_close(ws, close_status_code, close_msg):
         print('Websocket connection closed')
 
     ws.on_open = on_open
@@ -73,13 +71,8 @@ def create_websocket(market):
 
     ws.run_forever()
 
-# In the if __name__ == '__main__': block, replace the loop with the following:
-if __name__ == '__main__':
-    for product_id in CoinbaseAPI.PRODUCT_IDS:
-        websocket_thread = Thread(target=create_websocket, args=(product_id,))
-        websocket_thread.daemon = True
-        websocket_thread.start()
-        time.sleep(1)
-    # Keep the WebSocket threads running
-    while True:
-        time.sleep(1)
+# Iterate over each product ID and create a separate thread with a WebSocket connection
+for product_id in CoinbaseAPI.PRODUCT_IDS:
+    websocket_thread = Thread(target=create_websocket, args=(product_id,))
+    websocket_thread.start()
+    time.sleep(1)  # Sleep for 1 second between creating each WebSocket connection
