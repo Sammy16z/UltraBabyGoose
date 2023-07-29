@@ -141,7 +141,7 @@ class MainFrame:
 
         while running:
             # Use the updated websocket_data dictionary directly
-            for product_id, data in websocket_data.items():
+            for product_id, data in websocket_data.websocket_data.items():
                 latest_price = float(data['tickers'][0]['price'])
                 self.trade_bot.price_data[product_id].append(latest_price)
 
