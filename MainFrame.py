@@ -36,7 +36,7 @@ from collections.abc import MutableMapping
 
 import socket
 import CoinbaseAPI
-from WebRunner import get_websocket_data
+from WebRunner import start_websocket_feed, get_websocket_data
 
 from CoinbaseExchange import CoinbaseExchange
 from PeakSpam import PeakSpam
@@ -154,6 +154,9 @@ class MainFrame:
                 # Execute the PeakSpam bot for the current product_id and amount
                 await self.trade_bot.execute(product_id, amount)
 
+            
+            # Allow other tasks to run by using await asyncio.sleep(0)
+            await asyncio.sleep(0)
             # This should be at the bottom of execution
 
             # Test if transaction was successful
