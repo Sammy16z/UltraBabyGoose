@@ -36,7 +36,7 @@ from collections.abc import MutableMapping
 
 import socket
 import CoinbaseAPI
-from WebRunner import websocket_data
+from WebRunner import get_websocket_data
 
 from CoinbaseExchange import CoinbaseExchange
 from PeakSpam import PeakSpam
@@ -141,16 +141,15 @@ class MainFrame:
 
         while running:
             # Use the updated websocket_data dictionary directly
-            for product_id, data in websocket_data.websocket_data.items():
+            data = get_websocket_data()
+            for product_id, data in data.items():
                 latest_price = float(data['tickers'][0]['price'])
+                print(f"Latest Price for {product_id}: {latest_price}")
                 self.trade_bot.price_data[product_id].append(latest_price)
 
                 # Calculate the ZigZag indicator and update zigzag_data for the specific product_id
                 zigzag = self.trade_bot.calculate_zigzag(self.trade_bot.price_data[product_id])
                 self.trade_bot.zigzag_data[product_id] = zigzag
-
-                # Log the latest_prices for each product_id
-                logging.info(f"Latest Price for {product_id}: {latest_price}")
 
                 # Execute the PeakSpam bot for the current product_id and amount
                 await self.trade_bot.execute(product_id, amount)

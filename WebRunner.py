@@ -28,11 +28,14 @@ CHANNEL_NAMES = {
 # The base URL of the API
 WS_API_URL = 'wss://advanced-trade-ws.coinbase.com'
 
-# Dictionary to hold the latest market data for each product_id
+# Create a global variable to hold the latest market data for each product_id
 websocket_data = {}
 
 # Threading lock for printing messages
 print_lock = threading.Lock()
+
+def get_websocket_data():
+    return websocket_data
 
 def sign_message(message):
     message = hmac.new(SIGNING_KEY.encode('utf-8'), message.encode('utf-8'), digestmod=hashlib.sha256).hexdigest()
